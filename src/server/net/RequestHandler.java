@@ -63,12 +63,17 @@ class RequestHandler implements Runnable
     	ObjectInputStream fromClient = new ObjectInputStream(clientSock.getInputStream());
     	ObjectInputStream objIn;
 
-    	int length;
+    	int length = -1;
     	byte[] byteArr;
 			
-			
-		length = fromClient.read();
+    	
+    	while(length == -1)
+    	{
+    		length = fromClient.read();
+    	}
 		
+		System.out.println(length);
+
 		byteArr = new byte [length];
 		for(int i = 0; i < length; i++)
 			byteArr[i] = fromClient.readByte();
@@ -80,13 +85,18 @@ class RequestHandler implements Runnable
 		objIn.close();		
 				
 		return clientRequest;
+		
     }
     
 
     private void executeClientRequest(String string) throws IOException
     {
-
-    	if (!string.equals(".start"))
+    	
+    	if (string.equals(".stop"))
+    	{
+    		
+    	}
+    	else if (!string.equals(".start"))
     	{
     		contr.receiveGuess(string);
     	}
