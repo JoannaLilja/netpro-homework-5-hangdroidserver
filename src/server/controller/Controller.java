@@ -25,5 +25,4 @@ public class Controller
 	{
 		return game.getGameData();
 	}
-
 }

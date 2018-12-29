@@ -26,15 +26,14 @@ public class Game
 
 	
 	public Game()
-	{		
+	{
 		try {
 			pickNewWord();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-				
 	}
-	
+
 	public GameData getGameData()
 	{
         return new GameData(triesLeft, points, displayWord.toString(), winLoss, guessHistory);

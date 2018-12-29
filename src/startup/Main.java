@@ -1,8 +1,5 @@
 package startup;
 
-import java.io.IOException;
-
-import client.net.Client;
 import server.net.Server;
 
 /**
