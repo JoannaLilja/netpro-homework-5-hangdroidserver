@@ -8,6 +8,7 @@ import java.io.OutputStream;
 
 
 import java.net.Socket;
+import java.net.SocketException;
 
 
 import server.controller.Controller;
@@ -19,19 +20,32 @@ class RequestHandler implements Runnable
 {
 	
 	private Socket clientSock;
+	private ObjectInputStream fromClient;
+	private ObjectOutputStream toClient;
 	Controller contr;
-	
+	private boolean runAgain;
+
     RequestHandler(Socket clientSock)
     {
         this.clientSock = clientSock;
         this.contr = new Controller(new Game());
+		try {
+			toClient = new ObjectOutputStream(clientSock.getOutputStream());
+			fromClient = new ObjectInputStream(clientSock.getInputStream());
+		} catch (IOException e) {
+			e.printStackTrace();
+			this.runAgain = false;
+			return;
+		}
+
+		this.runAgain = true;
     }
 
     
     public void run()
     {
     	
-    	while(true)
+    	while(runAgain)
     	{
 	    	try
 	    	{
@@ -40,6 +54,11 @@ class RequestHandler implements Runnable
 			} 
 	    	catch (IOException e)
 	    	{
+				if (e instanceof SocketException) {
+					disconnect();
+					continue;
+				}
+
 				e.printStackTrace();
 			} catch (ClassNotFoundException e)
 	    	{
@@ -49,8 +68,17 @@ class RequestHandler implements Runnable
     	
 
     }
-    
-    /**
+
+	private void disconnect() {
+		runAgain = false;
+
+		try {
+			clientSock.close();
+		} catch (IOException e) {
+		}
+	}
+
+	/**
      * Listens for client request and returns it in the form of a String
      * @return
      * @throws ClassNotFoundException 
@@ -58,9 +86,7 @@ class RequestHandler implements Runnable
      */
     private String readClientRequest() throws ClassNotFoundException, IOException
     {
-    	
     	String clientRequest;
-    	ObjectInputStream fromClient = new ObjectInputStream(clientSock.getInputStream());
     	ObjectInputStream objIn;
 
     	int length = -1;
@@ -71,7 +97,7 @@ class RequestHandler implements Runnable
     	{
     		length = fromClient.read();
     	}
-		
+
 		byteArr = new byte [length];
 		for(int i = 0; i < length; i++)
 			byteArr[i] = fromClient.readByte();
@@ -92,21 +118,18 @@ class RequestHandler implements Runnable
     	
     	if (string.equals(".stop"))
     	{
-    		
+			disconnect();
     	}
-    	else if (!string.equals(".start"))
-    	{
-    		contr.receiveGuess(string);
-    	}
-    	
+    	else if (!string.equals(".start")) {
+			contr.receiveGuess(string);
+		}
+
     }
     
     private void respondClientRequest() throws IOException
     {
        
         GameData gameData = contr.getGameData();
-
-    	OutputStream toClient = clientSock.getOutputStream();
     	
     	ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream ();
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteOutputStream );
@@ -117,9 +140,7 @@ class RequestHandler implements Runnable
 		
 		byte[] byteArr = byteOutputStream.toByteArray();
 		int length = byteArr.length;
-		
-    	
-		toClient = new ObjectOutputStream(clientSock.getOutputStream());
+
 		
 		toClient.write(length);
 		toClient.write(byteArr);
