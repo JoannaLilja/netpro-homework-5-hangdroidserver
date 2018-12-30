@@ -72,8 +72,6 @@ class RequestHandler implements Runnable
     		length = fromClient.read();
     	}
 		
-		System.out.println(length);
-
 		byteArr = new byte [length];
 		for(int i = 0; i < length; i++)
 			byteArr[i] = fromClient.readByte();
